@@ -3,7 +3,7 @@
 @section('content')
     <div class="container">
         <h1>Editar Livro</h1>
-        <form action="{{ route('books.update', $book->id) }}" method="POST">
+        <form action="{{ route('books.update', $book->id) }}" method="POST" enctype="multipart/form-data">
             @csrf
             @method('PUT')
             <div class="mb-3">
@@ -32,6 +32,10 @@
                     @endforeach
                 </select>
             </div>
+            <div class="mb-3">
+        <label for="cover_image" class="form-label">Imagem de Capa</label>
+        <input type="file" class="form-control" id="cover_image" name="cover_image">
+    </div>
             <div class="mb-3">
                 <label for="published_year" class="form-label">Ano de Publicação</label>
                 <input type="number" class="form-control" id="published_year" name="published_year" value="{{ old('published_year', $book->published_year) }}" required>

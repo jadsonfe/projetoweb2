@@ -7,6 +7,7 @@ use App\Models\Author;
 use App\Models\Publisher;
 use App\Models\Category;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Storage;
 
 class BookController extends Controller
 {
@@ -42,10 +43,21 @@ class BookController extends Controller
             'publisher_id' => 'required|integer',
             'published_year' => 'required|integer',
             'categories' => 'required|array',
+            'cover_image' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
         ]);
 
         $book = Book::create($validatedData);
+        $book->title = $request->input('title');
         $book->categories()->attach($request->categories);
+
+        if ($request->hasFile('cover_image')) {
+            $file = $request->file('cover_image');
+            $filename = time() . '.' . $file->getClientOriginalExtension();
+            $path = $file->storeAs('public/covers', $filename); // Armazena na pasta public/covers
+            $book->cover_image = $filename;
+        }
+
+        $book->save();
 
         return redirect()->route('books.index')->with('success', 'Livro criado com sucesso!');
     }
@@ -69,22 +81,58 @@ class BookController extends Controller
             'publisher_id' => 'required|integer',
             'published_year' => 'required|integer',
             'categories' => 'required|array',
+            'cover_image' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
         ]);
-
+    
         $book = Book::findOrFail($id);
-        $book->update($validatedData);
+    
+        // Verifique se há uma nova imagem de capa
+        if ($request->hasFile('cover_image')) {
+            // Remova a imagem antiga se existir
+            if ($book->cover_image) {
+                $oldPath = 'public/covers/' . $book->cover_image;
+                if (Storage::exists($oldPath)) {
+                    Storage::delete($oldPath);
+                }
+            }
+    
+            // Armazene a nova imagem e atualize o nome da imagem
+            $file = $request->file('cover_image');
+            $filename = time() . '.' . $file->getClientOriginalExtension();
+            $file->storeAs('public/covers', $filename);
+    
+            // Atualize o nome da imagem no banco de dados
+            $book->cover_image = $filename;
+        }
+        // Salve as alterações no banco de dados
+        $book->save();
+        // Atualize os outros atributos do livro
+        $book->fill($validatedData);
         $book->categories()->sync($request->categories);
-
+    
+        
+        
+    
         return redirect()->route('books.index')->with('success', 'Livro atualizado com sucesso!');
     }
+    
+    
+    
 
+    
     // Função para excluir um livro do banco de dados
     public function destroy($id)
     {
+        
         $book = Book::findOrFail($id);
         $book->categories()->detach();
+        if ($book->cover_image) {
+            Storage::delete('public/covers/' . $book->cover_image);
+        }
         $book->delete();
 
         return redirect()->route('books.index')->with('success', 'Livro excluído com sucesso!');
     }
+
+   
 }

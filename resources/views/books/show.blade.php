@@ -2,6 +2,10 @@
 
 @section('content')
     <div class="container">
+    @if ($book->cover_image)
+    <img src="{{ Storage::url('covers/' . $book->cover_image) }}" alt="Imagem de Capa" style="max-width: 200px;">
+@endif
+
         <h1>{{ $book->title }}</h1>
         <p><strong>Autor:</strong> {{ $book->author->name }}</p>
         <p><strong>Editora:</strong> {{ $book->publisher->name }}</p>

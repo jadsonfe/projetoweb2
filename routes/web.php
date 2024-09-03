@@ -17,3 +17,6 @@ Route::resource('categories', CategoryController::class);
 
 // Rotas para Publishers
 Route::resource('publishers', PublisherController::class);
+
+// Rota padrão
+Route::resource('', BookController::class);
